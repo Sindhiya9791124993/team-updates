@@ -1,0 +1,190 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c298da18-eaed-4426-b538-26189b10bbd4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=name is : {{ $json.Name }} \nToday's status : {{ $json[\"Today's status\"] }} \nIf absent , reason : {{ $json[\"If absent, reason\"] }}\nUrgent alert needed : {{ $json[\"Urgent alert needed?\"] }}\none line update : {{ $json[\"One line update\"] }}\n\n\nundertand this and give me the summary.i dont want astericks i need only the content",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        700,
+        0
+      ],
+      "id": "159b3aaa-9f70-458f-a3be-b0f16382b0c5",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        740,
+        260
+      ],
+      "id": "f5d56e0d-ab52-4f75-b101-b274eb01cae8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gCjEhJmfjVAlvofM",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16nSJGmBaUuhePB4mlqu639RwQX0-L05HJXr2SDmHqQc",
+          "mode": "list",
+          "cachedResultName": "Team updates (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16nSJGmBaUuhePB4mlqu639RwQX0-L05HJXr2SDmHqQc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 827208036,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16nSJGmBaUuhePB4mlqu639RwQX0-L05HJXr2SDmHqQc/edit#gid=827208036"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        220,
+        0
+      ],
+      "id": "8058044b-4b11-445a-ace3-216cc5c4d0c2",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lUjr6ZHFm73OLRyW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "sindhiyakrishnan@gmail.com",
+        "subject": "Daily team Updates",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "c5137389-f1f1-4e9a-a1f9-b3ef5a14d359",
+      "name": "Gmail",
+      "webhookId": "805c606a-399a-4192-a9ec-a5a0b68dfd45",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "adOQdkDdMnzvlDix",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: Array of rows from Google Sheets or a similar source\n// Goal: Remove 'row_number' and 'Timestamp' fields from each item\n\nreturn items.map(item => {\n  const { json } = item;\n\n  // Create a new object without 'row_number' and 'Timestamp'\n  const cleaned = {\n    \"Name\": json[\"Name\"],\n    \"Today's status\": json[\"Today's status\"],\n    \"If absent, reason\": json[\"If absent, reason\"],\n    \"Urgent alert needed?\": json[\"Urgent alert needed?\"],\n    \"One line update\": json[\"One line update\"]\n  };\n\n  return {\n    json: cleaned\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "51a1c3c3-68f0-48e2-b456-eabbc5db9e2d",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4061b6bc-d38e-4215-9a89-968fe95a1c53",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98c2fccaa83da7fdf77aa949ee63014d09eecd7702e100ccdaad2b2c4a9bf564"
+  },
+  "id": "s10fu2hscbYZyGfj",
+  "tags": []
+}
